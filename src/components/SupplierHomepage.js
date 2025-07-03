@@ -21,6 +21,9 @@ const SupplierHomepage = () => {
   const [activeCategory, setActiveCategory] = useState('');
   const [selectedVenue, setSelectedVenue] = useState('');
 
+  // Events state (no longer sourced from localStorage)
+  const [events, setEvents] = useState([]);
+
   React.useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -211,8 +214,57 @@ const SupplierHomepage = () => {
     }
   }, [currentUserEmail, supplierEmail, userId]);
 
-  // Fetch events from localStorage
-  const events = JSON.parse(localStorage.getItem('events')) || [];
+  // Fetch public events (and invited events) from Supabase so every supplier sees the same list on any device
+  useEffect(() => {
+    async function fetchVisibleEvents() {
+      try {
+        // 1) Always pull all public events
+        const { data: publicEvents, error: pubErr } = await supabase
+          .from('events')
+          .select('*')
+          .eq('visibility', 'public');
+
+        if (pubErr) {
+          console.error('Error fetching public events:', pubErr);
+        }
+
+        // 2) Pull invite-specific events for this supplier (if we have their email)
+        const supplierEmailLower = (supplierEmail || currentUserEmail || '').toLowerCase().trim();
+        let inviteEvents = [];
+        if (supplierEmailLower) {
+          try {
+            const { data: inviteRows } = await supabase
+              .from('invites')
+              .select('event_id')
+              .eq('supplier_email', supplierEmailLower);
+
+            const eventIds = (inviteRows || []).map(r => r.event_id);
+
+            if (eventIds.length) {
+              const { data: invitedEvents } = await supabase
+                .from('events')
+                .select('*')
+                .in('id', eventIds);
+              inviteEvents = invitedEvents || [];
+            }
+          } catch (invErr) {
+            console.error('Error fetching invite events:', invErr);
+          }
+        }
+
+        // Merge arrays by id to avoid duplicates
+        const combinedMap = new Map();
+        [...(publicEvents || []), ...inviteEvents].forEach(ev => combinedMap.set(ev.id, ev));
+        const combinedEvents = Array.from(combinedMap.values());
+
+        setEvents(combinedEvents);
+      } catch (err) {
+        console.error('Unexpected error loading events:', err);
+      }
+    }
+
+    fetchVisibleEvents();
+  }, [supabase, supplierEmail, currentUserEmail]);
 
   // Navigation data
   const mainNavItems = [
