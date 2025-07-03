@@ -183,7 +183,7 @@ const CreateTaskPage = () => {
             const notificationData = {
               supplier_email: supplierEmail,
               event_id: eventId,
-              type: 'task-assignment',
+              type: 'task_assignment',
               status: 'unread',
               created_at: new Date().toISOString(),
               admin_user_id: adminId,

@@ -117,7 +117,7 @@ const EventsManagementPage = () => {
             supplierDetails.push({
               email: invite.supplier_email,
               name: profiles[0].full_name || profiles[0].companyname || invite.supplier_email,
-              serviceType: profiles[0].serviceType || 'Accepted'
+              serviceType: profiles[0].serviceType || ''
             });
           } else {
             // Otherwise just use the email
@@ -279,7 +279,7 @@ const EventsManagementPage = () => {
                         fontSize: '14px'
                       }}>
                         {supplier.name || supplier.email} 
-                        {supplier.serviceType && (
+                        {supplier.serviceType && supplier.serviceType.trim() !== '' && (
                           <span style={{ color: '#666', fontSize: '12px', marginLeft: '5px' }}>({supplier.serviceType})</span>
                         )}
                       </div>

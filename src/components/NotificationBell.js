@@ -216,7 +216,7 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
               *
             `)
             .eq('supplier_email', normalizedEmail)
-            .in('type', ['invitation', 'application_accepted', 'new_message'])
+            .in('type', ['invitation', 'application_accepted', 'new_message', 'task_assignment'])
             .order('created_at', { ascending: false })
             .limit(10);
         }
@@ -381,7 +381,7 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
                     *
                   `)
                   .eq('supplier_email', normalizedEmail)
-                  .in('type', ['invitation', 'application_accepted', 'new_message'])
+                  .in('type', ['invitation', 'application_accepted', 'new_message', 'task_assignment'])
                   .order('created_at', { ascending: false })
                   .limit(10);
               }
@@ -479,22 +479,15 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
 
   // Format the notification message based on type
   // Helper to determine if a notification should be hidden for suppliers
-  const shouldHideNotification = (notification, userType) => {
-    if (userType === 'supplier' && notification.type === 'invitation') {
-      // Hide all 'You have invited an event' notifications for suppliers
-      return true;
-    }
-    return false;
-  };
+  const shouldHideNotification = () => false;
 
   const formatNotificationMessage = (notification) => {
     // If content exists, check if it's an admin message and skip it
     // Always override for task assignment notifications
     if (notification.type === 'task_assignment') {
-      return 'You assigned a new task for this event.';
-    }
-    if (notification.type === 'invitation') {
-      return 'You have invited an event';
+      return userType === 'supplier'
+        ? 'You have been assigned a new task for this event.'
+        : 'You assigned a new task for this event.';
     }
     if (userType === 'supplier' && notification.type === 'application_accepted') {
       return 'Your application to an event has been accepted!';
@@ -510,9 +503,13 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
     const eventName = notification.events?.name || 
                      (notification.event_id ? `Event ID: ${notification.event_id}` : 'Unknown event');
     
-    if (userType === 'admin' && notification.type === 'application') {
-      return `You have invited a supplier to "${eventName}"`;
+    if (userType === 'admin' && notification.type === 'invitation') {
+      return `You invited a supplier to "${eventName}"`;
     } else if (userType === 'supplier' && notification.type === 'invitation') {
+      // If the event name could not be resolved (e.g., "Unknown event") fall back to a generic message
+      if (!eventName || eventName.startsWith('Unknown event') || eventName.startsWith('Event ID')) {
+        return "You've been invited to the event";
+      }
       return `You've been invited to the event "${eventName}"`;
     } else if (userType === 'supplier' && notification.type === 'application_accepted') {
       return `Your application to the event "${eventName}" has been accepted!`;
