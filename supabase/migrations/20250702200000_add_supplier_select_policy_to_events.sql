@@ -10,9 +10,18 @@ USING (
     WHERE i.event_id = id
       AND i.supplier_email = auth.email()
   )
-  OR EXISTS (
-    SELECT 1 FROM public.event_suppliers es
-    WHERE es.event_id = id
-      AND es.supplier_user_id = auth.uid()
-  )
+  /*
+   * NOTE: The clause below referenced event_suppliers which itself has an RLS
+   * policy that references events, leading Postgres to detect an infinite
+   * recursion when both policies are evaluated in the same statement.
+   * Until we can refactor the event_suppliers policies so they do not depend
+   * on events (or switch to a SECURITY DEFINER helper function), we remove
+   * this condition.  Suppliers will still see events they are invited to
+   * via the invites table and any public events.
+   */
+  -- OR EXISTS (
+  --   SELECT 1 FROM public.event_suppliers es
+  --   WHERE es.event_id = id
+  --     AND es.supplier_user_id = auth.uid()
+  -- )
 ); 
