@@ -262,8 +262,24 @@ const SupplierEvents = () => {
         const eventIdsList = Array.from(eventIdsSet);
         console.log(`Combined unique event IDs: ${eventIdsList.length}`, eventIdsList);
         
-        if (eventIdsList.length === 0) {
-          console.log('No events found for this supplier');
+        // Always include public events visible to every supplier
+        let publicEvents = [];
+        try {
+          const { data: pubEvents, error: pubErr } = await supabase
+            .from('events')
+            .select('*')
+            .eq('visibility', 'public');
+          if (pubErr) {
+            console.error('Error fetching public events:', pubErr);
+          } else {
+            publicEvents = pubEvents || [];
+          }
+        } catch (pubCatch) {
+          console.error('Unexpected error fetching public events:', pubCatch);
+        }
+
+        if (eventIdsList.length === 0 && publicEvents.length === 0) {
+          console.log('No events found for this supplier and no public events available');
           setEvents([]);
           setLoading(false);
           return;
