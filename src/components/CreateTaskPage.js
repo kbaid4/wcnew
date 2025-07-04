@@ -113,6 +113,8 @@ const CreateTaskPage = () => {
       const signedUpSuppliersArr = allSuppliers.filter(s => !eventSupplierEmails.includes(s.email));
       setMySuppliers(mySuppliersArr);
       setSignedUpSuppliers(signedUpSuppliersArr);
+      // Persist for other components/pages if needed
+      localStorage.setItem('signedUpSuppliers', JSON.stringify(signedUpSuppliersArr));
       setInvitedSuppliers(allInvitedSuppliers); // Set invited suppliers state with ALL invites
     }
     fetchSuppliers();
@@ -329,18 +331,14 @@ const CreateTaskPage = () => {
                     )}
                     {signedUpSuppliers.length > 0 && (
                       <optgroup label="Signed Up Suppliers">
-                        {(() => {
-  const localSuppliers = JSON.parse(localStorage.getItem('signedUpSuppliers') || '[]');
-  return localSuppliers.length > 0 ? localSuppliers.map(supplier => {
-    const displayName = supplier.name || supplier.email || `Supplier ${supplier.id}`;
-    const serviceType = supplier.serviceType;
-    return (
-      <option key={supplier.id} value={supplier.id}>
-        {serviceType ? `${displayName} (${serviceType})` : `${displayName} (No Service Type)`}
-      </option>
-    );
-  }) : <option disabled>No signed up suppliers found.</option>;
-})()}
+                        {signedUpSuppliers.map(supplier => {
+                          const displayName = supplier.full_name || supplier.company_name || supplier.email || `Supplier ${supplier.id}`;
+                          return (
+                            <option key={supplier.id} value={supplier.id}>
+                              {displayName}
+                            </option>
+                          );
+                        })}
                       </optgroup>
                     )}
                     {invitedSuppliers.length > 0 && (
