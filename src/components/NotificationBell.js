@@ -517,6 +517,11 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
       if (!eventName && notification.event_id) {
         eventName = `Event ID: ${notification.event_id}`;
       }
+      // If we still could not resolve the event name, it likely means this was a public event
+      // broadcast where the name wasn't included. Show a generic public-event message.
+      if (!eventName || eventName === 'this event' || eventName.startsWith('Event ID')) {
+        return 'New public event added.';
+      }
       return `You have been added to "${eventName || 'this event'}"`;
     }
     if (userType === 'admin' && notification.type === 'application_accepted') {
