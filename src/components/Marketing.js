@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserProfile from './UserProfile';
+import NotificationBell from './NotificationBell';
+import { supabase } from '../supabaseClient';
 
 const Marketing = () => {
   // User info will be handled by UserProfile component
@@ -10,6 +12,18 @@ const Marketing = () => {
   const [activeNav, setActiveNav] = useState('Home');
   const [activeCategory, setActiveCategory] = useState('Marketing');
   const [selectedVenue, setSelectedVenue] = useState('');
+  const [adminId, setAdminId] = useState(null);
+
+  // Fetch admin ID for notifications
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setAdminId(user.id);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   // Navigation data
   const mainNavItems = [
@@ -65,7 +79,7 @@ const Marketing = () => {
     ))}
   </div>
         
-  <div className="nav-section right">
+  <div className="nav-section right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
   {userNavItems.map(item => (
     <button
       key={item.name}
@@ -78,6 +92,7 @@ const Marketing = () => {
       {item.name}
     </button>
   ))}
+  <NotificationBell userType="admin" userId={adminId} />
   <UserProfile showName={false} />
 </div>
 

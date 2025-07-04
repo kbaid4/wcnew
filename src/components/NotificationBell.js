@@ -477,9 +477,24 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
     }
   };
 
-  // Format the notification message based on type
-  // Helper to determine if a notification should be hidden for suppliers
-  const shouldHideNotification = () => false;
+  // Helper to determine if a notification should be hidden based on user role
+  const shouldHideNotification = (notification, currentUserType) => {
+    if (!notification) return false;
+
+    // Hide message notifications that originate from the same role that is currently viewing
+    if (notification.type === 'new_message' && notification.content) {
+      const contentLower = notification.content.toLowerCase();
+      if (currentUserType === 'admin' && contentLower.startsWith('new message from admin')) {
+        // Admin should not see notifications they sent to suppliers
+        return true;
+      }
+      if (currentUserType === 'supplier' && contentLower.startsWith('new message from supplier')) {
+        // Supplier should not see notifications they sent to admin
+        return true;
+      }
+    }
+    return false;
+  };
 
   const formatNotificationMessage = (notification) => {
     // If content exists, check if it's an admin message and skip it
@@ -489,8 +504,11 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
         ? 'You have been assigned a new task for this event.'
         : 'You assigned a new task for this event.';
     }
+    if (userType === 'admin' && notification.type === 'application_accepted') {
+      return `Application accepted notification for event "${notification.events?.name || notification.event_id || 'Unknown event'}"`;
+    }
     if (userType === 'supplier' && notification.type === 'application_accepted') {
-      return 'Your application to an event has been accepted!';
+      return `Your application to the event "${notification.events?.name || notification.event_id || 'Unknown event'}" has been accepted!`;
     }
     if (notification.content) {
       // Always display content, including admin messages, for suppliers
@@ -511,8 +529,6 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
         return "You've been invited to the event";
       }
       return `You've been invited to the event "${eventName}"`;
-    } else if (userType === 'supplier' && notification.type === 'application_accepted') {
-      return `Your application to the event "${eventName}" has been accepted!`;
     } else if (notification.message) {
       // Fallback to message field if content is not available
       return notification.message;
