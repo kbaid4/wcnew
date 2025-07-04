@@ -398,6 +398,7 @@ const SupplierEvents = () => {
                 type: event.type || 'event',
                 start_date: event.start_date || event.startDate || new Date().toISOString(),
                 end_date: event.end_date || event.endDate || new Date().toISOString(),
+                location: event.location || 'Location not specified',
                 status: event.status || 'pending',
                 admin_id: event.admin_id || event.adminId,
                 created_at: event.created_at || new Date().toISOString(),

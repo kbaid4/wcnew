@@ -504,6 +504,21 @@ const NotificationBell = ({ userType, userId, supplierEmail }) => {
         ? 'You have been assigned a new task for this event.'
         : 'You assigned a new task for this event.';
     }
+    // Supplier invitation message
+    if (userType === 'supplier' && notification.type === 'invitation') {
+      let eventName = notification.events?.name;
+      if (!eventName) {
+        // Try to extract event name from existing content string: e.g., You have invited a supplier to "Fire"
+        if (notification.content) {
+          const match = notification.content.match(/"([^\"]+)"/);
+          if (match && match[1]) eventName = match[1];
+        }
+      }
+      if (!eventName && notification.event_id) {
+        eventName = `Event ID: ${notification.event_id}`;
+      }
+      return `You have been added to "${eventName || 'this event'}"`;
+    }
     if (userType === 'admin' && notification.type === 'application_accepted') {
       return `Application accepted notification for event "${notification.events?.name || notification.event_id || 'Unknown event'}"`;
     }
